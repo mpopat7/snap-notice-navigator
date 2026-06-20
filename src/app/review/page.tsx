@@ -20,6 +20,7 @@ export default function ReviewPage() {
   const [source, setSource] = useState<TextSource | undefined>();
   const [fileName, setFileName] = useState<string | undefined>();
   const [warning, setWarning] = useState<string | undefined>();
+  const [confirmed, setConfirmed] = useState(false);
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -52,15 +53,19 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10">
+    <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
       <Stepper current={2} />
 
-      <h1 className="text-2xl font-bold tracking-tight text-stone-900">
+      <div className="inline-flex items-center gap-1.5 rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 ring-1 ring-teal-200">
+        <span aria-hidden>🫶</span> Your turn — you’re in control here
+      </div>
+      <h1 className="mt-3 text-2xl font-bold tracking-tight text-stone-900">
         Check the text we read
       </h1>
       <p className="mt-2 text-stone-600">
-        Please read this over and fix anything that looks wrong before we
-        continue. The explanation is only as good as the text it’s based on.
+        Before anything is analyzed, please read this over and fix anything that
+        looks wrong. The explanation is only as good as the text it’s based on —
+        so this step really matters.
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
@@ -78,12 +83,12 @@ export default function ReviewPage() {
 
       <div className="mt-6">
         <HumanInLoopNote
-          title={isOcr ? "Photos can be misread — your check matters here" : "Nothing has been analyzed yet"}
+          title={isOcr ? "Photos can be misread — your check matters most here" : "Nothing has been analyzed yet"}
           tone="teal"
         >
           {isOcr
-            ? "Text recognition isn’t perfect. Compare the text below to your notice and correct any mistakes — this keeps the analysis accurate. You stay in control of what gets analyzed."
-            : "Your notice is only read after you confirm the text below is correct. You stay in control of what gets analyzed."}
+            ? "Text recognition isn’t perfect. Compare the text below to your notice and correct any mistakes — this keeps the analysis accurate. Nothing is sent for analysis until you say it looks right."
+            : "Your notice is only analyzed after you confirm the text below is correct. You decide when it’s ready."}
         </HumanInLoopNote>
       </div>
 
@@ -97,7 +102,7 @@ export default function ReviewPage() {
         </div>
       )}
 
-      <section className={cx(card, "mt-6 p-6")}>
+      <section className={cx(card, "mt-6 p-5 sm:p-6")}>
         <label htmlFor="extracted" className="block text-sm font-medium text-stone-700">
           Notice text (editable)
         </label>
@@ -105,12 +110,28 @@ export default function ReviewPage() {
           id="extracted"
           value={text}
           onChange={(e) => setText(e.target.value)}
-          rows={16}
+          rows={14}
           className={cx(field, "mt-2 resize-y font-mono text-[13px] leading-relaxed")}
         />
         <p className="mt-2 text-xs text-stone-500">
-          Tip: remove anything you don’t want to share, like your full name or case number.
+          Tip: you can remove anything you don’t want to share, like your full name or case number.
         </p>
+
+        {text.trim().length === 0 ? (
+          <p className="mt-4 rounded-lg bg-stone-50 px-3 py-2 text-sm text-stone-500">
+            The text is empty. Paste or restore your notice text to continue.
+          </p>
+        ) : (
+          <label className="mt-4 flex cursor-pointer items-start gap-2.5 rounded-xl border border-stone-200 bg-stone-50 p-3 text-sm text-stone-700">
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+              className="mt-0.5 h-4 w-4 accent-teal-700"
+            />
+            <span>I’ve read this and it matches my notice closely enough to continue.</span>
+          </label>
+        )}
       </section>
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
@@ -118,12 +139,12 @@ export default function ReviewPage() {
           ← Back to upload
         </button>
         <div className="flex gap-3">
-          <button onClick={() => setText("")} className={btnSecondary}>
+          <button onClick={() => { setText(""); setConfirmed(false); }} className={btnSecondary}>
             Clear
           </button>
           <button
             onClick={continueToIntake}
-            disabled={text.trim().length === 0}
+            disabled={text.trim().length === 0 || !confirmed}
             className={btnPrimary}
           >
             Looks right — continue →

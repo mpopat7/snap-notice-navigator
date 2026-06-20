@@ -79,7 +79,7 @@ export default function UploadPage() {
   const busy = status.kind === "extracting";
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10">
+    <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
       <Stepper current={1} />
 
       <h1 className="text-2xl font-bold tracking-tight text-stone-900">

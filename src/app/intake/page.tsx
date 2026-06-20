@@ -54,7 +54,7 @@ export default function IntakePage() {
   const stateSupported = answers.state && SUPPORTED_STATES.has(answers.state);
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-10">
+    <div className="mx-auto max-w-3xl px-5 py-8 sm:py-10">
       <Stepper current={3} />
 
       <h1 className="text-2xl font-bold tracking-tight text-stone-900">

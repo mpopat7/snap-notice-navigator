@@ -1,4 +1,5 @@
 import Link from "next/link";
+import HumanLoopStrip from "@/components/HumanLoopStrip";
 import { btnPrimary, btnSecondary, card, cx } from "@/lib/ui";
 
 const VALUE_PROPS = [
@@ -27,7 +28,7 @@ export default function Home() {
   return (
     <div className="mx-auto max-w-5xl px-5">
       {/* Hero */}
-      <section className="py-16 sm:py-24">
+      <section className="py-12 sm:py-24">
         <span className="inline-flex items-center rounded-full bg-teal-50 px-3 py-1 text-xs font-semibold text-teal-700 ring-1 ring-teal-200">
           For people who got a confusing SNAP letter
         </span>
@@ -78,6 +79,14 @@ export default function Home() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* Who decides what (human-in-the-loop) */}
+      <section className="pb-12">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-stone-500">
+          Who decides what
+        </h2>
+        <HumanLoopStrip />
       </section>
 
       {/* Responsible AI strip */}

@@ -84,5 +84,14 @@ Phases 1–3 done.
   escalation, and a limited-support banner for unsupported states. This replaces
   the Phase 1 `getAnalysis` mock (kept only as a client network-failure fallback).
 
-Next: Phase 5 (UX polish + responsible-AI: disclaimer/confidence design, mobile
-polish, loading/error states, help panel). Phases: docs/context.md §13.
+- **Phase 5** — UX polish + responsible AI. New components: `HumanLoopStrip`
+  (AI explains → you decide → agency decides, on landing + results) and
+  `ConfidenceMeter` (calm segmented confidence). Results page re-prioritized
+  (meaning + next-steps lead; transparency tucked into a "See how we read your
+  notice" disclosure), with a supportive low-confidence card, distinct
+  Official-sources and Need-more-help cards, and proper loading/empty/error
+  states. Review page adds an explicit "I've read this" confirmation gate before
+  analysis. Mobile padding/typography pass across pages.
+
+Next: Phase 6 (demo assets + docs: README, architecture diagram, seeded test
+cases, optional demo mode, judging-aligned snippets). Phases: docs/context.md §13.
