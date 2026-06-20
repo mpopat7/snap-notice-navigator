@@ -73,5 +73,16 @@ Phases 1–3 done.
   drives the status card + extracted fields + reasoning from this; low-confidence
   handling + escalation included. Recommendations are still the Phase 1 mock.
 
-Next: Phase 4 (retrieval over curated sources + real recommendation generation,
-replacing the `getAnalysis` mock in `src/lib/analyze.ts`). Phases: docs/context.md §13.
+- **Phase 4** — retrieval + recommendation: curated KB in `src/data/knowledge/`
+  (federal baseline + CA/TX/MO; `retrieve()` scores by state + notice type +
+  topic, federal-only fallback for unsupported states). `src/lib/recommend/`
+  generates the recommendation grounded in retrieved sources (LLM via
+  `messages.parse`, deterministic `template.ts` fallback) — sources/help are
+  attached from the KB, never invented by the model. One call `POST /api/recommend`
+  returns understanding + recommendation; results page renders explanation, likely
+  issue, prioritized steps, documents, real source links, help referrals,
+  escalation, and a limited-support banner for unsupported states. This replaces
+  the Phase 1 `getAnalysis` mock (kept only as a client network-failure fallback).
+
+Next: Phase 5 (UX polish + responsible-AI: disclaimer/confidence design, mobile
+polish, loading/error states, help panel). Phases: docs/context.md §13.
