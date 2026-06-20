@@ -60,9 +60,18 @@ A → G modules, kept separate (no mixing I/O, computation, output):
   stays in control (human-in-the-loop).
 
 ## Status
-Phases 1–2 done. **Phase 2** added the real document pipeline:
-`src/lib/extraction/` (Extractor interface + pdf-text / image-ocr / plain-text
-extractors, OCR is one swappable module) behind `POST /api/extract` (Node
-runtime). Upload page calls it with loading/error/sample-and-paste fallback;
-review page shows the source + emphasizes OCR correction. Next: Phase 3
-(classification + field extraction + recommendation). Phases: see docs/context.md §13.
+Phases 1–3 done.
+- **Phase 2** — document pipeline: `src/lib/extraction/` (Extractor interface +
+  pdf-text / image-ocr / plain-text; OCR is one swappable module) behind
+  `POST /api/extract`. Upload calls it with loading/error/sample+paste fallback.
+- **Phase 3** — classification + field extraction: `src/lib/analysis/`
+  (`schema.ts` zod + `NoticeUnderstanding`, `rules.ts` deterministic keyword
+  classifier + regex extractor, `llm.ts` Claude structured-output via
+  `messages.parse`, `index.ts` `analyzeNotice` orchestrator) behind
+  `POST /api/analyze`. Rules + LLM hybrid: rules always run (offline-safe), the
+  LLM (`claude-sonnet-4-6`) refines when `ANTHROPIC_API_KEY` is set. Results page
+  drives the status card + extracted fields + reasoning from this; low-confidence
+  handling + escalation included. Recommendations are still the Phase 1 mock.
+
+Next: Phase 4 (retrieval over curated sources + real recommendation generation,
+replacing the `getAnalysis` mock in `src/lib/analyze.ts`). Phases: docs/context.md §13.

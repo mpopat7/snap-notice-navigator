@@ -4,6 +4,7 @@
 
 import type { IntakeAnswers } from "@/types/snap";
 import type { ExtractionMethod } from "@/lib/extraction/types";
+import type { NoticeUnderstanding } from "@/lib/analysis/schema";
 
 // How the notice text got into the draft. "sample" is a seeded case; the rest
 // come from the extraction layer.
@@ -16,6 +17,7 @@ export interface Draft {
   source?: TextSource; // how the text was obtained
   warning?: string; // extraction warning (e.g. low OCR confidence)
   intake?: Partial<IntakeAnswers>;
+  understanding?: NoticeUnderstanding; // Phase 3 classification + field extraction
 }
 
 const KEY = "snap-draft";
