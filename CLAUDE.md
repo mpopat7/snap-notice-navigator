@@ -60,4 +60,9 @@ A → G modules, kept separate (no mixing I/O, computation, output):
   stays in control (human-in-the-loop).
 
 ## Status
-Phase 1 (scaffolding) in progress. Phases: see docs/context.md §13.
+Phases 1–2 done. **Phase 2** added the real document pipeline:
+`src/lib/extraction/` (Extractor interface + pdf-text / image-ocr / plain-text
+extractors, OCR is one swappable module) behind `POST /api/extract` (Node
+runtime). Upload page calls it with loading/error/sample-and-paste fallback;
+review page shows the source + emphasizes OCR correction. Next: Phase 3
+(classification + field extraction + recommendation). Phases: see docs/context.md §13.

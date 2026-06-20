@@ -3,11 +3,18 @@
 // sessionStorage, no backend, cleared when the tab closes.
 
 import type { IntakeAnswers } from "@/types/snap";
+import type { ExtractionMethod } from "@/lib/extraction/types";
+
+// How the notice text got into the draft. "sample" is a seeded case; the rest
+// come from the extraction layer.
+export type TextSource = ExtractionMethod | "sample";
 
 export interface Draft {
   caseId?: string; // set when a seeded sample case was chosen
   rawText?: string; // extracted/pasted/edited notice text
-  fileName?: string; // display only (no parsing in Phase 1)
+  fileName?: string; // display only
+  source?: TextSource; // how the text was obtained
+  warning?: string; // extraction warning (e.g. low OCR confidence)
   intake?: Partial<IntakeAnswers>;
 }
 

@@ -39,6 +39,10 @@ yarn-error.log*
 # build brief / internal planning notes (kept out of the public repo)
 /docs/context.md
 
+# tesseract.js downloads language data to cwd at runtime
+*.traineddata
+*.traineddata.gz
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
