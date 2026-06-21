@@ -31,7 +31,11 @@ export async function extractDocument(
     );
   }
 
-  const extractor = EXTRACTORS.find((e) => e.supports(mimeType, fileName));
+  // Route by name/mime first; if that fails, fall back to the file's signature
+  // so a real PDF/image with a missing extension or generic mime still works.
+  const extractor =
+    EXTRACTORS.find((e) => e.supports(mimeType, fileName)) ??
+    EXTRACTORS.find((e) => e.method === sniffMethod(buffer));
   if (!extractor) {
     throw new ExtractionError(
       "unsupported_type",
@@ -48,4 +52,21 @@ export async function extractDocument(
       "Something went wrong while reading that file. You can paste the text instead, or try a sample notice."
     );
   }
+}
+
+// Identify a file by its leading magic bytes when name/mime are unreliable.
+function sniffMethod(buffer: Buffer): ExtractionResult["method"] | null {
+  const head = buffer.subarray(0, 16);
+  const startsWith = (...bytes: number[]) => bytes.every((b, i) => head[i] === b);
+  // PDFs may carry a few leading whitespace/BOM bytes before "%PDF".
+  if (buffer.subarray(0, 1024).includes(Buffer.from("%PDF"))) return "pdf-text";
+  if (startsWith(0x89, 0x50, 0x4e, 0x47)) return "image-ocr"; // PNG
+  if (startsWith(0xff, 0xd8, 0xff)) return "image-ocr"; // JPEG
+  if (startsWith(0x47, 0x49, 0x46)) return "image-ocr"; // GIF
+  if (startsWith(0x42, 0x4d)) return "image-ocr"; // BMP
+  if (startsWith(0x49, 0x49, 0x2a, 0x00) || startsWith(0x4d, 0x4d, 0x00, 0x2a))
+    return "image-ocr"; // TIFF
+  if (startsWith(0x52, 0x49, 0x46, 0x46) && head.subarray(8, 12).toString() === "WEBP")
+    return "image-ocr"; // WEBP
+  return null;
 }
