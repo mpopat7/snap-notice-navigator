@@ -7,6 +7,29 @@ const LOW_CONFIDENCE = 60;
 // language-data cache must live there.
 const CACHE_PATH = process.env.TMPDIR ?? "/tmp";
 
+// Cap OCR so a slow/stuck worker (Tesseract is fragile in serverless runtimes)
+// returns a helpful error well before the function's wall-clock limit instead
+// of hanging until a gateway timeout.
+const OCR_TIMEOUT_MS = 30_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(
+        () =>
+          reject(
+            new ExtractionError(
+              "extraction_failed",
+              "Reading this image took too long. Try a smaller or clearer photo, upload a PDF, or paste the text below."
+            )
+          ),
+        ms
+      )
+    ),
+  ]);
+}
+
 // OCR for photos/screenshots of notices via Tesseract. This is the single module
 // to replace if you want a different OCR backend (e.g. a cloud OCR API): keep the
 // same `Extractor` shape and nothing else needs to change.
@@ -19,9 +42,12 @@ export const imageExtractor: Extractor = {
     mime.startsWith("image/") || /\.(png|jpe?g|webp|gif|bmp|tiff?)$/i.test(name),
   async extract(buffer) {
     const { createWorker } = await import("tesseract.js");
-    const worker = await createWorker("eng", undefined, { cachePath: CACHE_PATH });
+    const worker = await withTimeout(
+      createWorker("eng", undefined, { cachePath: CACHE_PATH }),
+      OCR_TIMEOUT_MS
+    );
     try {
-      const { data } = await worker.recognize(buffer);
+      const { data } = await withTimeout(worker.recognize(buffer), OCR_TIMEOUT_MS);
       const text = (data.text ?? "").trim();
       if (text.length < MIN_CHARS) {
         throw new ExtractionError(
@@ -35,7 +61,7 @@ export const imageExtractor: Extractor = {
           : undefined;
       return { text, method: "image-ocr", charCount: text.length, warning };
     } finally {
-      await worker.terminate();
+      await worker.terminate().catch(() => {});
     }
   },
 };
