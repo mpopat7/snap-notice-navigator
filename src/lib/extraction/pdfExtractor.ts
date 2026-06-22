@@ -1,4 +1,3 @@
-import { PDFParse } from "pdf-parse";
 import { ExtractionError, type Extractor } from "./types";
 
 const MIN_CHARS = 20;
@@ -6,11 +5,16 @@ const MIN_CHARS = 20;
 // Extracts the embedded text layer from a digital PDF. Scanned/photographed
 // PDFs have no text layer — those are reported as "no_text_found" so the user
 // can re-upload as an image (OCR) or paste instead.
+//
+// pdf-parse is imported lazily so a load failure (e.g. a missing native polyfill
+// in a serverless runtime) surfaces as a catchable extraction error returned as
+// JSON, instead of crashing the whole route at import time.
 export const pdfExtractor: Extractor = {
   method: "pdf-text",
   supports: (mime, name) =>
     mime === "application/pdf" || name.toLowerCase().endsWith(".pdf"),
   async extract(buffer) {
+    const { PDFParse } = await import("pdf-parse");
     const parser = new PDFParse({ data: new Uint8Array(buffer) });
     try {
       const result = await parser.getText();
