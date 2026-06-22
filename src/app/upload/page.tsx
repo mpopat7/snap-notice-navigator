@@ -8,11 +8,41 @@ import { NoticeTypeBadge } from "@/components/Badges";
 import { MOCK_CASES } from "@/data/cases";
 import { writeDraft } from "@/lib/session";
 import { btnGhost, btnPrimary, card, cx, field } from "@/lib/ui";
+import { extractImageInBrowser, isImageFile } from "@/lib/extraction/clientOcr";
+import type { ExtractionResult } from "@/lib/extraction/types";
 
 type Status =
   | { kind: "idle" }
-  | { kind: "extracting"; fileName: string }
+  | { kind: "extracting"; fileName: string; progress?: number }
   | { kind: "error"; message: string };
+
+// PDFs and text go to the serverless extraction route; images are OCR'd in the
+// browser. Returns a uniform ExtractionResult or throws an Error with a
+// user-facing message.
+async function extractViaServer(file: File): Promise<ExtractionResult> {
+  const form = new FormData();
+  form.append("file", file);
+  let res: Response;
+  try {
+    res = await fetch("/api/extract", { method: "POST", body: form });
+  } catch {
+    throw new Error(
+      "We couldn’t reach the reader service. You can paste the text below, or try a sample notice."
+    );
+  }
+  let data: { ok: boolean; message?: string; result?: ExtractionResult };
+  try {
+    data = await res.json();
+  } catch {
+    throw new Error(
+      "We couldn’t read that file. You can paste the text below, or try a sample notice."
+    );
+  }
+  if (!data.ok || !data.result) {
+    throw new Error(data.message ?? "We couldn’t read that file.");
+  }
+  return data.result;
+}
 
 const ACCEPT = ".txt,.pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/*,text/plain";
 
@@ -50,28 +80,27 @@ export default function UploadPage() {
     if (!file) return;
     setStatus({ kind: "extracting", fileName: file.name });
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/extract", { method: "POST", body: form });
-      const data = await res.json();
-      if (!data.ok) {
-        setStatus({ kind: "error", message: data.message ?? "We couldn’t read that file." });
-        return;
-      }
+      const result = isImageFile(file)
+        ? await extractImageInBrowser(file, (progress) =>
+            setStatus({ kind: "extracting", fileName: file.name, progress })
+          )
+        : await extractViaServer(file);
       writeDraft({
         caseId: undefined,
-        rawText: data.result.text,
+        rawText: result.text,
         fileName: file.name,
-        source: data.result.method,
-        warning: data.result.warning,
+        source: result.method,
+        warning: result.warning,
         intake: undefined,
       });
       router.push("/review");
-    } catch {
+    } catch (err) {
       setStatus({
         kind: "error",
         message:
-          "We couldn’t reach the reader service. You can paste the text below, or try a sample notice.",
+          err instanceof Error
+            ? err.message
+            : "We couldn’t read that file. You can paste the text below, or try a sample notice.",
       });
     }
   }
@@ -95,7 +124,11 @@ export default function UploadPage() {
         <div className="mt-6 flex items-center gap-3 rounded-xl border border-teal-200 bg-teal-50 p-4">
           <Spinner />
           <div className="text-sm text-teal-900">
-            <p className="font-semibold">Reading “{status.fileName}”…</p>
+            <p className="font-semibold">
+              Reading “{status.fileName}”…
+              {typeof status.progress === "number" &&
+                ` ${Math.round(status.progress * 100)}%`}
+            </p>
             <p className="text-teal-800">
               Photos and scans use on-device text recognition and can take a few seconds.
             </p>

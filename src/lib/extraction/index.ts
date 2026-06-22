@@ -3,7 +3,6 @@
 // extractor by editing the registry below — callers only use `extractDocument`.
 
 import { pdfExtractor } from "./pdfExtractor";
-import { imageExtractor } from "./imageExtractor";
 import { textExtractor } from "./textExtractor";
 import { ExtractionError, type ExtractionResult, type Extractor } from "./types";
 
@@ -12,7 +11,9 @@ export type { ExtractionMethod, ExtractionResult, ExtractionErrorCode } from "./
 
 export const MAX_BYTES = 10 * 1024 * 1024; // 10 MB
 
-const EXTRACTORS: Extractor[] = [textExtractor, pdfExtractor, imageExtractor];
+// Images are OCR'd in the browser (see lib/extraction/clientOcr) — Tesseract
+// can't run in the serverless runtime — so the server only handles PDFs and text.
+const EXTRACTORS: Extractor[] = [textExtractor, pdfExtractor];
 
 export const ACCEPTED_TYPES = ".txt, .pdf, .png, .jpg, .jpeg, .webp";
 
